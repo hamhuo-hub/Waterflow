@@ -1,0 +1,98 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.0.3 Chrome/140.0.7339.249 Electron/38.7.0 Safari/537.36" version="29.0.3">
+  <diagram id="WaterflowArchitecture" name="Waterflow Core Architecture">
+    <mxGraphModel dx="1783" dy="1051" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="0Cwwi1zjw6Xa9WcyMQa8-4" value="New Task&lt;br&gt;(新建任务)" style="shape=umlFrame;whiteSpace=wrap;html=1;pointerEvents=0;width=270;height=40;" vertex="1" parent="1">
+          <mxGeometry width="1540" height="900" as="geometry" />
+        </mxCell>
+        <mxCell id="0Cwwi1zjw6Xa9WcyMQa8-5" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="40" y="60" width="1410" height="810" as="geometry" />
+        </mxCell>
+        <mxCell id="UI_Layer" value="UI Layer (Presentation)" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="0Cwwi1zjw6Xa9WcyMQa8-5" vertex="1">
+          <mxGeometry width="276.4705882352941" height="810" as="geometry" />
+        </mxCell>
+        <mxCell id="FlightPanel" value="&lt;b&gt;Flight Panel&lt;/b&gt;&lt;br&gt;(仪表盘 UI)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="UI_Layer" vertex="1">
+          <mxGeometry x="55.29411764705881" y="270" width="165.88235294117644" height="101.25" as="geometry" />
+        </mxCell>
+        <mxCell id="UserAction" value="User Input&lt;br&gt;(Enter Key)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="UI_Layer" vertex="1">
+          <mxGeometry x="69.11764705882352" y="20" width="138.23529411764704" height="101.25" as="geometry" />
+        </mxCell>
+        <mxCell id="Edge_User_UI" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="UI_Layer" source="UserAction" target="FlightPanel" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Logic_Layer" value="Logic Layer (In-Memory)" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="0Cwwi1zjw6Xa9WcyMQa8-5" vertex="1">
+          <mxGeometry x="483.82352941176464" width="497.6470588235294" height="810" as="geometry" />
+        </mxCell>
+        <mxCell id="Dispatcher" value="&lt;b&gt;Task Dispatcher&lt;/b&gt;&lt;br&gt;(Singleton Controller)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1" parent="Logic_Layer" vertex="1">
+          <mxGeometry x="55.29" y="270" width="354.71" height="101.25" as="geometry" />
+        </mxCell>
+        <mxCell id="State" value="&lt;b&gt;Observable List&lt;/b&gt;&lt;br&gt;(Reactive State / Cache)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="Logic_Layer" vertex="1">
+          <mxGeometry x="55.294117647058826" y="67.5" width="193.52941176470588" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="WriteBuffer" value="&lt;b&gt;Write Queue&lt;/b&gt;&lt;br&gt;(削峰缓冲区)" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" parent="Logic_Layer" vertex="1">
+          <mxGeometry x="248.8235294117647" y="540" width="193.52941176470588" height="101.25" as="geometry" />
+        </mxCell>
+        <mxCell id="Data_Layer" value="Data Layer (Persistence)" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="0Cwwi1zjw6Xa9WcyMQa8-5" vertex="1">
+          <mxGeometry x="1133.5294117647059" width="276.4705882352941" height="810" as="geometry" />
+        </mxCell>
+        <mxCell id="InfoPool" value="&lt;b&gt;Info Pool&lt;/b&gt;&lt;br&gt;(SQLite / File)" style="shape=datastore;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="Data_Layer" vertex="1">
+          <mxGeometry x="62.20588235294117" y="523.125" width="152.05882352941174" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="Edge_Call" value="1. CreateTask()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" parent="0Cwwi1zjw6Xa9WcyMQa8-5" source="FlightPanel" target="Dispatcher" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="193.52941176470588" y="320.625" as="sourcePoint" />
+            <mxPoint x="387.05882352941177" y="320.625" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Edge_UpdateMem" value="2. Update (Sync)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;" parent="0Cwwi1zjw6Xa9WcyMQa8-5" target="State" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="636" y="270" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="636" y="270" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Edge_Notify" value="3. Notify Changed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontColor=#009900;" parent="0Cwwi1zjw6Xa9WcyMQa8-5" source="State" target="FlightPanel" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="180" y="135" />
+              <mxPoint x="180" y="210" />
+              <mxPoint x="138" y="210" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Edge_Buffer" value="4. Enqueue (Async)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="0Cwwi1zjw6Xa9WcyMQa8-5" target="WriteBuffer" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="829" y="371" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="829" y="371" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Edge_Persist" value="5. Batch Write" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="0Cwwi1zjw6Xa9WcyMQa8-5" source="WriteBuffer" target="InfoPool" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="0Cwwi1zjw6Xa9WcyMQa8-3" value="" style="group" vertex="1" connectable="0" parent="0Cwwi1zjw6Xa9WcyMQa8-5">
+          <mxGeometry x="750" width="160" height="810" as="geometry" />
+        </mxCell>
+        <mxCell id="BoundaryLine" value="" style="endArrow=none;dashed=1;html=1;strokeWidth=2;strokeColor=#FF0000;" parent="0Cwwi1zjw6Xa9WcyMQa8-3" edge="1" source="Annotation">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="79.99697399527182" y="810" as="sourcePoint" />
+            <mxPoint x="79.99697399527182" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="0Cwwi1zjw6Xa9WcyMQa8-2" value="" style="endArrow=none;dashed=1;html=1;strokeWidth=2;strokeColor=#FF0000;" edge="1" parent="0Cwwi1zjw6Xa9WcyMQa8-3" target="Annotation">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="79.99697399527182" y="810" as="sourcePoint" />
+            <mxPoint x="79.99697399527182" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Annotation" value="&lt;font color=&quot;#ff0000&quot;&gt;&lt;b&gt;IO Isolation Boundary&lt;/b&gt;&lt;/font&gt;&lt;br&gt;UI is never blocked by Disk" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;dashed=1;" parent="0Cwwi1zjw6Xa9WcyMQa8-3" vertex="1">
+          <mxGeometry y="70.625" width="159.99999999999994" height="50.625" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
