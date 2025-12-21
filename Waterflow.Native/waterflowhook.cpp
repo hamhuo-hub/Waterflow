@@ -42,7 +42,7 @@ LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				if (g_isDragging) {
 					PostMessage(g_hTargetWnd, WM_WATERFLOW_GESTURE, GESTURE_DRAGGING,
 						MAKELPARAM(pMouseStruct->pt.x, pMouseStruct->pt.y));
-					return 1; // eat!
+					// CONTINUE MOVING
 				}
 				else { // caculate distance
 					long dx = pMouseStruct->pt.x - g_startPoint.x;
@@ -50,19 +50,19 @@ LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
 					if (sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD) {
 						g_isDragging = true;
 						PostMessage(g_hTargetWnd, WM_WATERFLOW_GESTURE, GESTURE_START, 0);
-						return 1; // eat!
+						// CONTINUE MOVING
 					}
 				}
 			}
 			break;
 
 		case WM_RBUTTONUP:
-			if (g_isDragging) {
-				g_isDragging = false;
-				g_isRightDown = false;
-				// stop interaction
+			bool wasDragging = g_isDragging;
+			g_isDragging = false;
+			g_isRightDown = false;
+			if (wasDragging) {
 				PostMessage(g_hTargetWnd, WM_WATERFLOW_GESTURE, GESTURE_END, 0);
-				return 1; // eat!
+				return 1; // IGNORE FOR AVOIDING RIGHT PANEL
 			}
 			break;
 		}

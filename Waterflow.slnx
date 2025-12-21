@@ -1,0 +1,10 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Waterflow.Core/Waterflow.Core.csproj" />
+  <Project Path="Waterflow.Desktop/Waterflow.Desktop.csproj" />
+  <Project Path="Waterflow.Native/Waterflow.Native.vcxproj" Id="56c3bb32-43f0-4ebb-b7fb-ae592ec3ce7b" />
+</Solution>
