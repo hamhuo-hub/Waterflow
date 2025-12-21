@@ -8,6 +8,9 @@
 #define GESTURE_END 3
 #define GESTURE_CANCEL 4
 
+// TEST
+#define INJECTED_EVENT_SIGNATURE 0xFF998877
+
 // interaction status
 // GLOBAL VAR
 bool g_isRightDown = false;
@@ -26,7 +29,9 @@ HMODULE g_hModule = NULL;
 LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	if (nCode == HC_ACTION) {
 		MSLLHOOKSTRUCT* pMouseStruct = (MSLLHOOKSTRUCT*)lParam;
-
+		if (pMouseStruct->dwExtraInfo == INJECTED_EVENT_SIGNATURE) {
+			return CallNextHookEx(g_hHook, nCode, wParam, lParam);
+		}
 		switch (wParam) {
 			// click right button
 		case WM_RBUTTONDOWN:
@@ -34,7 +39,7 @@ LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			// get point position
 			g_startPoint = pMouseStruct->pt;
 			g_isDragging = false;
-			break;
+			return 1;
 			// WATING FOR FURTHER ACTION
 
 		case WM_MOUSEMOVE:
@@ -57,12 +62,32 @@ LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			break;
 
 		case WM_RBUTTONUP:
-			bool wasDragging = g_isDragging;
-			g_isDragging = false;
-			g_isRightDown = false;
-			if (wasDragging) {
-				PostMessage(g_hTargetWnd, WM_WATERFLOW_GESTURE, GESTURE_END, 0);
-				return 1; // IGNORE FOR AVOIDING RIGHT PANEL
+			if (g_isRightDown) {
+				g_isRightDown = false;
+				if (g_isDragging) {
+					
+					g_isDragging = false;
+					PostMessage(g_hTargetWnd, WM_WATERFLOW_GESTURE, GESTURE_END, 0);
+					return 1; 
+				}
+				else {
+
+					INPUT inputs[2] = {};
+
+
+					inputs[0].type = INPUT_MOUSE;
+					inputs[0].mi.dwFlags = MOUSEEVENTF_RIGHTDOWN;
+					inputs[0].mi.dwExtraInfo = INJECTED_EVENT_SIGNATURE; 
+
+					// ²¹·¢Ì§Æð
+					inputs[1].type = INPUT_MOUSE;
+					inputs[1].mi.dwFlags = MOUSEEVENTF_RIGHTUP;
+					inputs[1].mi.dwExtraInfo = INJECTED_EVENT_SIGNATURE; 
+
+					SendInput(2, inputs, sizeof(INPUT));
+
+					return 1; 
+				}
 			}
 			break;
 		}
