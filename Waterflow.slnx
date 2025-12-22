@@ -5,6 +5,12 @@
     <Platform Name="x86" />
   </Configurations>
   <Project Path="Waterflow.Core/Waterflow.Core.csproj" />
-  <Project Path="Waterflow.Desktop/Waterflow.Desktop.csproj" />
   <Project Path="Waterflow.Native/Waterflow.Native.vcxproj" Id="56c3bb32-43f0-4ebb-b7fb-ae592ec3ce7b" />
+  <Project Path="Waterflow.WinUI/Waterflow.WinUI.csproj" Id="ac2975fe-ddb8-4d01-b210-70d912b99aad">
+    <BuildDependency Project="Waterflow.Native/Waterflow.Native.vcxproj" />
+    <Platform Solution="*|Any CPU" Project="x64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+    <Deploy />
+  </Project>
 </Solution>

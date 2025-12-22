@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Waterflow.WinUI (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Waterflow.WinUI (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
