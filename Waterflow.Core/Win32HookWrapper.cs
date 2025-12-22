@@ -1,6 +1,5 @@
-﻿
-using System.ComponentModel.DataAnnotations;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
+using System.Windows.Threading;
 namespace Waterflow.Core
 {
     public class Win32HookWrapper
@@ -24,8 +23,6 @@ namespace Waterflow.Core
         public const int WM_WATERFLOW_MSG = WM_USER + 1001;
 
         
-
-
         // dll import
         [DllImport("Waterflow.Native.dll", EntryPoint = "InstallHook")]
         private static extern bool StartMonitor(IntPtr hwndTarget);
@@ -37,7 +34,12 @@ namespace Waterflow.Core
         // BroadCast
         public event GestureEventHandler OnShowWheel;
         public event GestureEventHandler OnGestureMove;
-        public event SimpleEventHandler OnGestureExecute; 
+        public event SimpleEventHandler OnGestureExecute;
+
+        private Thread _inputThread;
+
+        private Dispatcher _inputDispatcher;
+
 
         public bool Start(IntPtr hwnd) {
             // dll calling
