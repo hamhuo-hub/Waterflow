@@ -20,13 +20,14 @@
         <Canvas x:Name="MainCanvas" Background="Transparent">
 
             <Grid x:Name="GlassDot"
-                  Width="120" Height="120"
-                  CornerRadius="60"
+                  Width="60" Height="60"
+                  CornerRadius="40"
                   Translation="0,0,32"
                   Shadow="{StaticResource SharedShadow}"
+                  Visibility="Collapsed"
                   Canvas.Left="-200" Canvas.Top="-200">
 
-                <Border CornerRadius="60">
+                <Border CornerRadius="40">
                     <Border.Background>
                         <AcrylicBrush TintColor="White" 
                                       TintOpacity="0.2" 
@@ -35,17 +36,35 @@
                     </Border.Background>
                 </Border>
 
-                <Border BorderThickness="2" CornerRadius="60">
+                <Border BorderThickness="2" CornerRadius="40">
                     <Border.BorderBrush>
                         <RadialGradientBrush x:Name="HighlightBorder" 
                                              GradientOrigin="0.5,0.5" 
                                              Center="0.5,0.5" 
-                                             RadiusX="0.7" RadiusY="0.7">
+                                             RadiusX="0.6" RadiusY="0.6">
                             <GradientStop Color="#FFFFFFFF" Offset="0"/>
+                            <GradientStop Color="#80FFFFFF" Offset="0.3"/>
                             <GradientStop Color="#00FFFFFF" Offset="1"/>
                         </RadialGradientBrush>
                     </Border.BorderBrush>
                 </Border>
+
+                <!-- Follow mouse highlight point -->
+                <Ellipse x:Name="HighlightDot"
+                         HorizontalAlignment="Left"
+                         VerticalAlignment="Top"
+                         Opacity="0.8"
+                         IsHitTestVisible="False">
+                    <Ellipse.RenderTransform>
+                        <TranslateTransform X="0" Y="0"/>
+                    </Ellipse.RenderTransform>
+                    <Ellipse.Fill>
+                        <RadialGradientBrush>
+                            <GradientStop Color="#FFFFFFFF" Offset="0"/>
+                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                        </RadialGradientBrush>
+                    </Ellipse.Fill>
+                </Ellipse>
 
                 <Ellipse Margin="15" Opacity="0.4" IsHitTestVisible="False">
                     <Ellipse.Fill>
@@ -58,7 +77,7 @@
             </Grid>
         </Canvas>
 
-        <TextBlock Text="请按住右键拖拽鼠标..." 
+        <TextBlock Text="Please hold down the right mouse button and drag the mouse..." 
                    HorizontalAlignment="Center" 
                    VerticalAlignment="Bottom" 
                    Margin="0,0,0,50" 

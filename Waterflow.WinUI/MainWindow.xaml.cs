@@ -1,7 +1,7 @@
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Media;
 using System;
-using System.Runtime.InteropServices;
-using Waterflow.Core;
+using Windows.Foundation;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -9,109 +9,86 @@ using Waterflow.Core;
 namespace Waterflow.WinUI
 {
     /// <summary>
-    /// An empty window that can be used on its own or navigated to within a Frame.
+    /// Main window that coordinates gesture handling and animations
     /// </summary>
     public sealed partial class MainWindow : Window
     {
-        // --NATIVE FIELD--
-        private const int INPUT_MOUSE = 0;
-        private const int WM_USER = 0x0400;
-        private const int WM_WATERFLOW_SIMULATE_CLICK = WM_USER + 1002;
-        private const uint INJECTED_EVENT_SIGNATURE = 0xFF998877;
-        private const uint MOUSEEVENTF_RIGHTDOWN = 0x0008;
-        private const uint MOUSEEVENTF_RIGHTUP = 0x0010;
-
-        // Field
         private IntPtr _hwnd;
-        private Win32HookWrapper _hook;
-
-        private delegate IntPtr SUBCLASSPROC(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, uint uIdSubclass, IntPtr dwRefData);
-        private readonly SUBCLASSPROC _subclassProc;
-
-        [StructLayout(LayoutKind.Sequential)]
-        struct INPUT { public uint type; public MOUSEINPUT mi; }
-
-        [StructLayout(LayoutKind.Sequential)]
-        struct MOUSEINPUT
-        {
-            public int dx; public int dy; public uint mouseData; public uint dwFlags;
-            public uint time; public UIntPtr dwExtraInfo;
-        }
-
-        [DllImport("comctl32.dll", SetLastError = true)]
-        static extern bool SetWindowSubclass(IntPtr hWnd, SUBCLASSPROC pfnSubclass, uint uIdSubclass, IntPtr dwRefData);
-
-        [DllImport("comctl32.dll", SetLastError = true)]
-        static extern IntPtr DefSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
-
-        [DllImport("comctl32.dll", SetLastError = true)]
-        static extern bool RemoveWindowSubclass(IntPtr hWnd, SUBCLASSPROC pfnSubclass, uint uIdSubclass);
-
-        [DllImport("user32.dll")]
-        static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+        private GestureHandler? _gestureHandler;
+        private DotAnimationManager? _animationManager;
+        private RadialGradientBrush? _highlightBorder;
+        private Microsoft.UI.Xaml.Shapes.Ellipse? _highlightDot;
 
         public MainWindow()
         {
             InitializeComponent();
-            _hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this); // get handle
-            _subclassProc = new SUBCLASSPROC(WindowSubclassProc); // AVOID GC
+            _hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
 
-            SetWindowSubclass(_hwnd, _subclassProc, 0, IntPtr.Zero);
-
-            InitializeHook();
+            // Initialize highlight elements when window is activated
+            this.Activated += MainWindow_Activated;
 
             this.Closed += (s, e) =>
             {
-                _hook?.Stop();
-                RemoveWindowSubclass(_hwnd, _subclassProc, 0);
+                _gestureHandler?.Dispose();
             };
-
         }
 
-        private void InitializeHook()
+        private void MainWindow_Activated(object sender, WindowActivatedEventArgs args)
         {
-            _hook = new Win32HookWrapper();
-            _hook.OnShowWheel += (x, y) => { this.Title = $"¡¾¿ªÊ¼¡¿×ø±ê: {x}, {y}"; };
-
-            _hook.OnGestureMove += (x, y) =>
+            // Find and save highlight elements (only once)
+            if (_highlightBorder == null || _highlightDot == null)
             {
-                this.Title = $"¡¾ÍÏ×§ÖÐ¡¿×ø±ê: {x}, {y}";
-            };
-
-            _hook.OnGestureExecute += () =>
-            {
-                this.Title = "¡¾Ö´ÐÐ¡¿¶¯×÷ÉúÐ§£¡";
-            };
-
-            _hook.Start(_hwnd);
-        }
-
-        private IntPtr WindowSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, uint uIdSubclass, IntPtr dwRefData)
-        {
-            if (uMsg == WM_WATERFLOW_SIMULATE_CLICK)
-            {
-                PerformInPlaceRightClick();
-                return IntPtr.Zero;
+                var content = this.Content as FrameworkElement;
+                _highlightBorder = content?.FindName("HighlightBorder") as RadialGradientBrush;
+                _highlightDot = content?.FindName("HighlightDot") as Microsoft.UI.Xaml.Shapes.Ellipse;
             }
-            _hook?.FilterMessage((int)uMsg, wParam, lParam);
-            return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+
+            // Initialize managers (only once)
+            if (_gestureHandler == null)
+            {
+                _gestureHandler = new GestureHandler(_hwnd);
+                _gestureHandler.OnShowWheel += OnShowWheel;
+                _gestureHandler.OnGestureMove += OnGestureMove;
+                _gestureHandler.OnGestureExecute += OnGestureExecute;
+            }
+
+            if (_animationManager == null)
+            {
+                _animationManager = new DotAnimationManager(GlassDot, _highlightBorder, _highlightDot);
+            }
         }
 
-        private void PerformInPlaceRightClick()
+        private void OnShowWheel(int screenX, int screenY)
         {
-            INPUT[] inputs = new INPUT[2];
+            // test output: show coordinates in title bar
+            this.Title = $"å¼€å§‹æ‰‹åŠ¿: {screenX}, {screenY}";
 
-            // Input 0: Right Button Down
-            inputs[0].type = INPUT_MOUSE;
-            inputs[0].mi.dwFlags = MOUSEEVENTF_RIGHTDOWN;
-            inputs[0].mi.dwExtraInfo = (UIntPtr)INJECTED_EVENT_SIGNATURE; // Vital: Prevents hook loop
+            // Convert screen coordinates to window coordinates
+            var windowPoint = _gestureHandler!.ScreenToWindowPoint(screenX, screenY);
 
-            // Input 1: Right Button Up
-            inputs[1].type = INPUT_MOUSE;
-            inputs[1].mi.dwFlags = MOUSEEVENTF_RIGHTUP;
-            inputs[1].mi.dwExtraInfo = (UIntPtr)INJECTED_EVENT_SIGNATURE; // Vital
+            // Show dot at position with animation
+            _animationManager?.ShowAtPosition(windowPoint);
+        }
 
-            SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
+        private void OnGestureMove(int screenX, int screenY)
+        {
+            // test output: show coordinates in title bar
+            this.Title = $"æ‹–åŠ¨ä¸­: {screenX}, {screenY}";
+
+            // Convert screen coordinates to window coordinates
+            var windowPoint = _gestureHandler!.ScreenToWindowPoint(screenX, screenY);
+
+            // Update dot position with elastic effect
+            _animationManager?.UpdatePosition(windowPoint);
+        }
+
+        private void OnGestureExecute()
+        {
+            // test output: show status in title bar
+            this.Title = "æ‰§è¡Œæ‰‹åŠ¿æ•ˆæžœ";
+
+            // Hide dot with animation
+            _animationManager?.Hide();
         }
     }
 }

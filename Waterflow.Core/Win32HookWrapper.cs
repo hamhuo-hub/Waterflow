@@ -32,13 +32,9 @@ namespace Waterflow.Core
 
 
         // BroadCast
-        public event GestureEventHandler OnShowWheel;
-        public event GestureEventHandler OnGestureMove;
-        public event SimpleEventHandler OnGestureExecute;
-
-        private Thread _inputThread;
-
-        private Dispatcher _inputDispatcher;
+        public event GestureEventHandler? OnShowWheel = null;
+        public event GestureEventHandler? OnGestureMove = null;
+        public event SimpleEventHandler? OnGestureExecute = null;
 
 
         public bool Start(IntPtr hwnd) {
