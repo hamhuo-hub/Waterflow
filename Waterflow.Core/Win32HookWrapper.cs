@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using System.Windows.Threading;
 namespace Waterflow.Core
 {
     public class Win32HookWrapper

@@ -1,10 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	  <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+	  <TargetFrameworks>net8.0;net8.0-windows10.0.19041.0</TargetFrameworks>
 	  <ImplicitUsings>enable</ImplicitUsings>
 	  <Nullable>enable</Nullable>
-	  <UseWPF>true</UseWPF>
   </PropertyGroup>
+
+  <!-- Keep Win32 hook wrapper Windows-only to reduce coupling for future cross-platform ports -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <Compile Remove="Win32HookWrapper.cs" />
+  </ItemGroup>
 
 </Project>

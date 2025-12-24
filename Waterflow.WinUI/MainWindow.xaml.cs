@@ -1,94 +1,84 @@
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Media;
 using System;
-using Windows.Foundation;
+using Waterflow.Core;
+using WinRT.Interop;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace Waterflow.WinUI
+namespace Waterflow.WinUI;
+
+/// <summary>
+/// Invisible, click-through overlay window:
+/// - Receives global mouse hook messages via Win32 (hwnd)
+/// - Renders the global glass-dot effect above all apps
+/// </summary>
+public sealed partial class MainWindow : Window
 {
-    /// <summary>
-    /// Main window that coordinates gesture handling and animations
-    /// </summary>
-    public sealed partial class MainWindow : Window
+    private readonly IntPtr _hwnd;
+    private readonly GestureHandler _gestureHandler;
+    private readonly GlassDotOverlay _dotOverlay;
+    private StickyNoteWindow? _stickyNoteWindow;
+
+    public MainWindow()
     {
-        private IntPtr _hwnd;
-        private GestureHandler? _gestureHandler;
-        private DotAnimationManager? _animationManager;
-        private RadialGradientBrush? _highlightBorder;
-        private Microsoft.UI.Xaml.Shapes.Ellipse? _highlightDot;
+        InitializeComponent();
 
-        public MainWindow()
+        _hwnd = WindowNative.GetWindowHandle(this);
+        // Hide from taskbar/Alt-Tab and keep it non-interactive (message host only).
+        Win32WindowStyles.MakeToolWindow(_hwnd);
+
+        _gestureHandler = new GestureHandler(_hwnd);
+        _gestureHandler.OnShowWheel += OnShowWheel;
+        _gestureHandler.OnGestureMove += OnGestureMove;
+        _gestureHandler.OnGestureExecute += OnGestureExecute;
+        _gestureHandler.OnUpwardDrag += OnUpwardDrag;
+
+        _dotOverlay = new GlassDotOverlay();
+
+        Closed += (_, __) =>
         {
-            InitializeComponent();
-            _hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            _gestureHandler.Dispose();
+            _dotOverlay.Dispose();
+        };
+    }
 
-            // Initialize highlight elements when window is activated
-            this.Activated += MainWindow_Activated;
+    private void OnShowWheel(int screenX, int screenY)
+    {
+        _dotOverlay.ShowAt(screenX, screenY);
+    }
 
-            this.Closed += (s, e) =>
-            {
-                _gestureHandler?.Dispose();
-            };
+    private void OnGestureMove(int screenX, int screenY)
+    {
+        _dotOverlay.UpdateMouse(screenX, screenY);
+    }
+
+    private void OnGestureExecute()
+    {
+        _dotOverlay.Hide();
+    }
+
+    private void OnUpwardDrag(int screenX, int screenY)
+    {
+        _dotOverlay.Hide();
+
+        DispatcherQueue.TryEnqueue(() => ShowStickyNoteAt(screenX, screenY));
+    }
+
+    private void ShowStickyNoteAt(int screenX, int screenY)
+    {
+        if (_stickyNoteWindow is null)
+        {
+            _stickyNoteWindow = new StickyNoteWindow();
+            _stickyNoteWindow.Closed += (_, __) => _stickyNoteWindow = null;
         }
 
-        private void MainWindow_Activated(object sender, WindowActivatedEventArgs args)
-        {
-            // Find and save highlight elements (only once)
-            if (_highlightBorder == null || _highlightDot == null)
-            {
-                var content = this.Content as FrameworkElement;
-                _highlightBorder = content?.FindName("HighlightBorder") as RadialGradientBrush;
-                _highlightDot = content?.FindName("HighlightDot") as Microsoft.UI.Xaml.Shapes.Ellipse;
-            }
+        _stickyNoteWindow.ShowAt(screenX, screenY);
+    }
 
-            // Initialize managers (only once)
-            if (_gestureHandler == null)
-            {
-                _gestureHandler = new GestureHandler(_hwnd);
-                _gestureHandler.OnShowWheel += OnShowWheel;
-                _gestureHandler.OnGestureMove += OnGestureMove;
-                _gestureHandler.OnGestureExecute += OnGestureExecute;
-            }
-
-            if (_animationManager == null)
-            {
-                _animationManager = new DotAnimationManager(GlassDot, _highlightBorder, _highlightDot);
-            }
-        }
-
-        private void OnShowWheel(int screenX, int screenY)
-        {
-            // test output: show coordinates in title bar
-            this.Title = $"开始手势: {screenX}, {screenY}";
-
-            // Convert screen coordinates to window coordinates
-            var windowPoint = _gestureHandler!.ScreenToWindowPoint(screenX, screenY);
-
-            // Show dot at position with animation
-            _animationManager?.ShowAtPosition(windowPoint);
-        }
-
-        private void OnGestureMove(int screenX, int screenY)
-        {
-            // test output: show coordinates in title bar
-            this.Title = $"拖动中: {screenX}, {screenY}";
-
-            // Convert screen coordinates to window coordinates
-            var windowPoint = _gestureHandler!.ScreenToWindowPoint(screenX, screenY);
-
-            // Update dot position with elastic effect
-            _animationManager?.UpdatePosition(windowPoint);
-        }
-
-        private void OnGestureExecute()
-        {
-            // test output: show status in title bar
-            this.Title = "执行手势效果";
-
-            // Hide dot with animation
-            _animationManager?.Hide();
-        }
+    internal void HideAtStartup()
+    {
+        // Ensure nothing is visible after activation.
+        Win32WindowStyles.HideWindow(_hwnd);
     }
 }

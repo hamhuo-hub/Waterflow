@@ -135,6 +135,16 @@ namespace Waterflow.WinUI
             UpdateHighlightPosition(mousePosition.X, mousePosition.Y);
         }
 
+        /// <summary>
+        /// Updates only the internal highlight based on cursor position, without moving the dot container.
+        /// Useful when the dot is hosted inside a small non-transparent window (to avoid revealing the window background).
+        /// </summary>
+        public void UpdateHighlightOnly(Point mousePosition)
+        {
+            if (!_isDotFixed) return;
+            UpdateHighlightPosition(mousePosition.X, mousePosition.Y);
+        }
+
         public void Hide()
         {
             // Hide dot with Fluent 2 fade-out animation

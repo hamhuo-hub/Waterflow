@@ -5,82 +5,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Title="Waterflow.WinUI">
+    Title="Waterflow">
 
-    <Grid>
-        <Grid.Resources>
-            <ThemeShadow x:Key="SharedShadow" />
-        </Grid.Resources>
-
-        <Image Source="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&amp;w=2564&amp;auto=format&amp;fit=crop"
-               Stretch="UniformToFill" Opacity="0.8"/>
-
-        <Grid Background="#CC101010"/>
-
-        <Canvas x:Name="MainCanvas" Background="Transparent">
-
-            <Grid x:Name="GlassDot"
-                  Width="60" Height="60"
-                  CornerRadius="40"
-                  Translation="0,0,32"
-                  Shadow="{StaticResource SharedShadow}"
-                  Visibility="Collapsed"
-                  Canvas.Left="-200" Canvas.Top="-200">
-
-                <Border CornerRadius="40">
-                    <Border.Background>
-                        <AcrylicBrush TintColor="White" 
-                                      TintOpacity="0.2" 
-                                      TintLuminosityOpacity="0.85"
-                                      FallbackColor="#202020"/>
-                    </Border.Background>
-                </Border>
-
-                <Border BorderThickness="2" CornerRadius="40">
-                    <Border.BorderBrush>
-                        <RadialGradientBrush x:Name="HighlightBorder" 
-                                             GradientOrigin="0.5,0.5" 
-                                             Center="0.5,0.5" 
-                                             RadiusX="0.6" RadiusY="0.6">
-                            <GradientStop Color="#FFFFFFFF" Offset="0"/>
-                            <GradientStop Color="#80FFFFFF" Offset="0.3"/>
-                            <GradientStop Color="#00FFFFFF" Offset="1"/>
-                        </RadialGradientBrush>
-                    </Border.BorderBrush>
-                </Border>
-
-                <!-- Follow mouse highlight point -->
-                <Ellipse x:Name="HighlightDot"
-                         HorizontalAlignment="Left"
-                         VerticalAlignment="Top"
-                         Opacity="0.8"
-                         IsHitTestVisible="False">
-                    <Ellipse.RenderTransform>
-                        <TranslateTransform X="0" Y="0"/>
-                    </Ellipse.RenderTransform>
-                    <Ellipse.Fill>
-                        <RadialGradientBrush>
-                            <GradientStop Color="#FFFFFFFF" Offset="0"/>
-                            <GradientStop Color="#00FFFFFF" Offset="1"/>
-                        </RadialGradientBrush>
-                    </Ellipse.Fill>
-                </Ellipse>
-
-                <Ellipse Margin="15" Opacity="0.4" IsHitTestVisible="False">
-                    <Ellipse.Fill>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                            <GradientStop Color="#FFFFFFFF" Offset="0"/>
-                            <GradientStop Color="Transparent" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Ellipse.Fill>
-                </Ellipse>
-            </Grid>
-        </Canvas>
-
-        <TextBlock Text="Please hold down the right mouse button and drag the mouse..." 
-                   HorizontalAlignment="Center" 
-                   VerticalAlignment="Bottom" 
-                   Margin="0,0,0,50" 
-                   Foreground="#80FFFFFF"/>
-    </Grid>
+    <!-- Message host only. The global glass-dot is rendered by a Win32 layered window overlay. -->
+    <Grid Background="Transparent" IsHitTestVisible="False" />
 </Window>

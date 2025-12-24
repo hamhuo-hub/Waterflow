@@ -15,6 +15,7 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Waterflow.Core;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -35,6 +36,10 @@ namespace Waterflow.WinUI
         public App()
         {
             InitializeComponent();
+            AppDomain.CurrentDomain.ProcessExit += (_, __) =>
+            {
+                try { WriteQueue.Instance.Dispose(); } catch { }
+            };
         }
 
         /// <summary>
@@ -45,6 +50,10 @@ namespace Waterflow.WinUI
         {
             _window = new MainWindow();
             _window.Activate();
+            if (_window is MainWindow main)
+            {
+                main.HideAtStartup();
+            }
         }
     }
 }

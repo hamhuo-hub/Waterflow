@@ -21,6 +21,13 @@ namespace Waterflow.WinUI
         private Win32HookWrapper? _hook;
         private SUBCLASSPROC _subclassProc;
 
+        // --- gesture state (for higher-level gestures in managed code) ---
+        private const int UPWARD_DRAG_THRESHOLD_PX = 120;
+        private int _gestureStartX;
+        private int _gestureStartY;
+        private bool _isGestureActive;
+        private bool _upwardDragTriggered;
+
         [StructLayout(LayoutKind.Sequential)]
         struct INPUT { public uint type; public MOUSEINPUT mi; }
 
@@ -61,6 +68,7 @@ namespace Waterflow.WinUI
         public event Action<int, int>? OnShowWheel;
         public event Action<int, int>? OnGestureMove;
         public event Action? OnGestureExecute;
+        public event Action<int, int>? OnUpwardDrag;
 
         public GestureHandler(IntPtr hwnd)
         {
@@ -74,11 +82,46 @@ namespace Waterflow.WinUI
         private void InitializeHook()
         {
             _hook = new Win32HookWrapper();
-            _hook.OnShowWheel += (x, y) => OnShowWheel?.Invoke(x, y);
-            _hook.OnGestureMove += (x, y) => OnGestureMove?.Invoke(x, y);
-            _hook.OnGestureExecute += () => OnGestureExecute?.Invoke();
+
+            _hook.OnShowWheel += (x, y) =>
+            {
+                _isGestureActive = true;
+                _upwardDragTriggered = false;
+                _gestureStartX = x;
+                _gestureStartY = y;
+                OnShowWheel?.Invoke(x, y);
+            };
+
+            _hook.OnGestureMove += (x, y) =>
+            {
+                if (_isGestureActive && !_upwardDragTriggered)
+                {
+                    TryEmitUpwardDrag(x, y);
+                }
+                OnGestureMove?.Invoke(x, y);
+            };
+
+            _hook.OnGestureExecute += () =>
+            {
+                _isGestureActive = false;
+                _upwardDragTriggered = false;
+                OnGestureExecute?.Invoke();
+            };
 
             _hook.Start(_hwnd);
+        }
+
+        private void TryEmitUpwardDrag(int x, int y)
+        {
+            int dx = x - _gestureStartX;
+            int dy = y - _gestureStartY;
+
+            // Upward: dy < 0 and exceeds threshold; also prefer "mostly vertical" gestures.
+            if (dy <= -UPWARD_DRAG_THRESHOLD_PX && Math.Abs(dy) >= Math.Abs(dx) * 2)
+            {
+                _upwardDragTriggered = true;
+                OnUpwardDrag?.Invoke(x, y);
+            }
         }
 
         private IntPtr WindowSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, uint uIdSubclass, IntPtr dwRefData)
