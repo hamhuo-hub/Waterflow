@@ -31,6 +31,11 @@
                          FontSize="16"
                          Background="Transparent"
                          BorderThickness="0"
+                         BorderBrush="Transparent"
+                         UseSystemFocusVisuals="False"
+                         FocusVisualPrimaryThickness="0"
+                         FocusVisualSecondaryThickness="0"
+                         Padding="0"
                          KeyDown="Input_KeyDown" />
 
                 <TextBlock Text="Enter 创建 · Esc 取消"

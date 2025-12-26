@@ -3,6 +3,7 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using System;
+using System.Threading.Tasks;
 using Waterflow.Core;
 using WinRT.Interop;
 
@@ -16,6 +17,8 @@ public sealed partial class StickyNoteWindow : Window
     private bool _everActivated;
     private DateTimeOffset _suppressBlurDismissUntilUtc;
     private bool _isHiding;
+    private bool _inputLoaded;
+    private int _focusRetryToken;
 
     public StickyNoteWindow()
     {
@@ -23,6 +26,8 @@ public sealed partial class StickyNoteWindow : Window
 
         _hwnd = WindowNative.GetWindowHandle(this);
         Win32WindowStyles.MakeToolWindow(_hwnd);
+
+        Input.Loaded += (_, __) => _inputLoaded = true;
 
         Activated += (_, args) =>
         {
@@ -38,7 +43,7 @@ public sealed partial class StickyNoteWindow : Window
             }
 
             _everActivated = true;
-            FocusInput();
+            FocusInputWithRetry();
         };
     }
 
@@ -60,7 +65,7 @@ public sealed partial class StickyNoteWindow : Window
         {
             if (_isHiding) return;
             Win32WindowStyles.TryBringToForeground(_hwnd);
-            FocusInput();
+            FocusInputWithRetry();
         });
     }
 
@@ -89,9 +94,34 @@ public sealed partial class StickyNoteWindow : Window
         _appWindow.Resize(new Windows.Graphics.SizeInt32(360, 220));
     }
 
-    private void FocusInput()
+    private void FocusInputWithRetry()
     {
-        DispatcherQueue.TryEnqueue(() => Input.Focus(Microsoft.UI.Xaml.FocusState.Programmatic));
+        int token = ++_focusRetryToken;
+        DispatcherQueue.TryEnqueue(() => TryFocusOnce(token, remaining: 10));
+    }
+
+    private void TryFocusOnce(int token, int remaining)
+    {
+        if (_isHiding) return;
+        if (token != _focusRetryToken) return;
+
+        // First show: TextBox may not be fully in the visual tree yet.
+        if (!_inputLoaded)
+        {
+            if (remaining <= 0) return;
+            _ = Task.Delay(25).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => TryFocusOnce(token, remaining - 1)));
+            return;
+        }
+
+        bool ok = Input.Focus(Microsoft.UI.Xaml.FocusState.Programmatic);
+        if (ok)
+        {
+            try { Input.SelectAll(); } catch { }
+            return;
+        }
+
+        if (remaining <= 0) return;
+        _ = Task.Delay(40).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => TryFocusOnce(token, remaining - 1)));
     }
 
     private static Windows.Graphics.PointInt32 ComputePosition(int screenX, int screenY, int width, int height)
